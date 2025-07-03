@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,10 @@ import PortfolioChart from '@/components/PortfolioChart';
 import InteractiveStats from '@/components/InteractiveStats';
 import EnhancedGraphics from '@/components/EnhancedGraphics';
 import NotificationCenter from '@/components/NotificationCenter';
+import SettingsPanel from '@/components/SettingsPanel';
+import SimulationPanel from '@/components/SimulationPanel';
+import ExportPanel from '@/components/ExportPanel';
+import AutoBalancePanel from '@/components/AutoBalancePanel';
 import { useToast } from '@/hooks/use-toast';
 import { RefreshCw, Zap, Download, Target, Shield, TrendingUp, Settings, HelpCircle } from 'lucide-react';
 
@@ -34,12 +37,12 @@ const Index = () => {
           title: "🔄 Data Refreshed",
           description: "Portfolio data updated automatically",
         });
-      }, 30000); // 30 seconds
+      }, 30000);
     }
     return () => clearInterval(interval);
   }, [autoRefresh, isWalletConnected, toast]);
 
-  // Mock data for demonstration
+  // Enhanced mock data with more pool options
   const mockPositions = [
     {
       id: '1',
@@ -50,7 +53,9 @@ const Index = () => {
       collateralRatio: 180,
       liquidationThreshold: 150,
       riskLevel: 'medium' as const,
-      insuranceCoverage: 85
+      insuranceCoverage: 85,
+      poolType: 'Lending',
+      protocol: 'Blend'
     },
     {
       id: '2',
@@ -61,7 +66,9 @@ const Index = () => {
       collateralRatio: 250,
       liquidationThreshold: 130,
       riskLevel: 'low' as const,
-      insuranceCoverage: 92
+      insuranceCoverage: 92,
+      poolType: 'Liquidity',
+      protocol: 'Soroswap'
     },
     {
       id: '3',
@@ -72,17 +79,39 @@ const Index = () => {
       collateralRatio: 160,
       liquidationThreshold: 140,
       riskLevel: 'high' as const,
-      insuranceCoverage: 78
+      insuranceCoverage: 78,
+      poolType: 'Cross-Chain',
+      protocol: 'Stellar Bridge'
+    },
+    {
+      id: '4',
+      name: 'XLM-USDT Pool',
+      apy: 14.8,
+      borrowed: 0,
+      lent: 5000,
+      collateralRatio: 300,
+      liquidationThreshold: 120,
+      riskLevel: 'low' as const,
+      insuranceCoverage: 95,
+      poolType: 'Staking',
+      protocol: 'Stellar'
+    },
+    {
+      id: '5',
+      name: 'AQUA-yXLM Pool',
+      apy: 22.1,
+      borrowed: 3000,
+      lent: 4000,
+      collateralRatio: 200,
+      liquidationThreshold: 160,
+      riskLevel: 'medium' as const,
+      insuranceCoverage: 88,
+      poolType: 'Yield Farming',
+      protocol: 'AquaProtocol'
     }
   ];
 
-  const chartData = mockPositions.map(pos => ({
-    name: pos.name,
-    value: pos.lent - pos.borrowed,
-    apy: pos.apy,
-    risk: pos.collateralRatio
-  }));
-
+  // Enhanced mock recommendations with more options
   const mockRecommendations = [
     {
       id: '1',
@@ -96,7 +125,8 @@ const Index = () => {
         apyChange: 2.1,
         riskChange: -15.0
       },
-      priority: 'high' as const
+      priority: 'high' as const,
+      category: 'Risk Reduction'
     },
     {
       id: '2',
@@ -108,7 +138,23 @@ const Index = () => {
         apyChange: -0.5,
         riskChange: -8.0
       },
-      priority: 'medium' as const
+      priority: 'medium' as const,
+      category: 'Health Improvement'
+    },
+    {
+      id: '3',
+      type: 'move' as const,
+      fromPool: 'XLM-USDT Pool',
+      toPool: 'AQUA-yXLM Pool',
+      amount: 2500,
+      asset: 'XLM',
+      reason: 'Capitalize on higher yield opportunity in AQUA-yXLM Pool',
+      impact: {
+        apyChange: 7.3,
+        riskChange: 3.5
+      },
+      priority: 'low' as const,
+      category: 'Yield Optimization'
     }
   ];
 
@@ -135,6 +181,13 @@ const Index = () => {
       action: 'Monitor new positions for 24 hours'
     }
   ];
+
+  const chartData = mockPositions.map(pos => ({
+    name: pos.name,
+    value: pos.lent - pos.borrowed,
+    apy: pos.apy,
+    risk: pos.collateralRatio
+  }));
 
   const handleWalletConnect = (address: string) => {
     setWalletAddress(address);
@@ -312,7 +365,7 @@ const Index = () => {
           <InteractiveStats totalValue={totalPortfolioValue} positions={mockPositions} />
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 mt-8">
-            <TabsList className="grid w-full grid-cols-5 bg-background/50 backdrop-blur-sm">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-background/50 backdrop-blur-sm">
               <TabsTrigger value="portfolio" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
                 📊 Portfolio
               </TabsTrigger>
@@ -320,12 +373,24 @@ const Index = () => {
                 📈 Charts
               </TabsTrigger>
               <TabsTrigger value="risk" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
-                🛡️ Risk Monitor
+                🛡️ Risk
               </TabsTrigger>
               <TabsTrigger value="rebalance" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
                 ⚖️ Rebalance
               </TabsTrigger>
-              <TabsTrigger value="ai" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+              <TabsTrigger value="autobalance" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+                ⚡ Auto-Balance
+              </TabsTrigger>
+              <TabsTrigger value="simulation" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+                🎯 Simulation
+              </TabsTrigger>
+              <TabsTrigger value="export" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+                📊 Export
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2 data-[state=active]:bg-primary/20">
+                ⚙️ Settings
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="flex items-center gap-2 data-[state=active]:bg-primary/20 col-span-full lg:col-span-1">
                 🤖 AI Assistant
               </TabsTrigger>
             </TabsList>
@@ -351,6 +416,22 @@ const Index = () => {
 
             <TabsContent value="rebalance" className="space-y-6 animate-fade-in">
               <RebalanceRecommendations recommendations={mockRecommendations} />
+            </TabsContent>
+
+            <TabsContent value="autobalance" className="space-y-6 animate-fade-in">
+              <AutoBalancePanel />
+            </TabsContent>
+
+            <TabsContent value="simulation" className="space-y-6 animate-fade-in">
+              <SimulationPanel />
+            </TabsContent>
+
+            <TabsContent value="export" className="space-y-6 animate-fade-in">
+              <ExportPanel />
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6 animate-fade-in">
+              <SettingsPanel />
             </TabsContent>
 
             <TabsContent value="ai" className="space-y-6 animate-fade-in">
